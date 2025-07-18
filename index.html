@@ -5,8 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MindAR + GLTF Loader Örneği</title>
   <style>
-    body, html { margin: 0; overflow: hidden; width: 100%; height: 100%; }
-    #ar-container { width: 100%; height: 100%; position: relative; }
+    body, html {
+      margin: 0; padding: 0; overflow: hidden;
+      width: 100%; height: 100%;
+    }
+    #ar-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -16,44 +23,43 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <!-- GLTFLoader -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-  <!-- MindAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+  <!-- MindAR (v1.2.0) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
 
   <script>
     const container = document.querySelector("#ar-container");
-
     let model = null;
-    let modelPosition = new THREE.Vector3();
 
     async function startAR() {
-      const mindar = new window.MindAR.IMAGE.MindARThree({
+      // MindAR başlat
+      const mindar = new window.MindARThree({
         container: container,
         imageTargetSrc: "./qrcode.mind"
       });
 
       const { renderer, scene, camera } = mindar;
 
-      // GLTF Loader ile model yükleme
+      // GLTF model yükle
       const loader = new THREE.GLTFLoader();
       loader.load("./model.gltf", (gltf) => {
         model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5); // Model ölçeği (isteğe göre ayarla)
+        model.scale.set(0.5, 0.5, 0.5);
         scene.add(model);
+      }, undefined, (error) => {
+        console.error("Model yüklenirken hata:", error);
       });
 
-      // Marker bulunduğunda pozisyon güncelle
+      // Marker görüldüğünde pozisyonu güncelle
       mindar.on("targetFound", (event) => {
         if (!model) return;
         const pos = event.detail.position;
         model.position.set(pos.x, pos.y, pos.z);
-        modelPosition.copy(model.position);
       });
 
-      // Marker kaybolduğunda model pozisyonu kalır (hiçbir işlem yapılmaz)
+      // Marker kaybolduğunda model pozisyonu kalır (hiçbir işlem yok)
 
       await mindar.start();
 
-      // Animasyon döngüsü
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
       });
