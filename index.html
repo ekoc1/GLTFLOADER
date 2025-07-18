@@ -1,48 +1,59 @@
-<body>
-  <div id="ar-container"></div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MindAR GLTF AR</title>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      #ar-container { width: 100vw; height: 100vh; position: relative; }
+    </style>
+  </head>
+  <body>
+    <div id="ar-container"></div>
 
-  <script type="module">
-    import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js';
+    <script type="module">
+      import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js';
+      import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
+      import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
 
-    const startAR = async () => {
-      const mindarThree = new MindARThree({
-        container: document.querySelector("#ar-container"),
-        imageTargetSrc: "./targets.mind",
-      });
+      const startAR = async () => {
+        const mindarThree = new MindARThree({
+          container: document.querySelector("#ar-container"),
+          imageTargetSrc: "./qrcode.mind", // marker hedef dosyan
+        });
 
-      const { renderer, scene, camera } = mindarThree;
+        const { renderer, scene, camera } = mindarThree;
 
-      const anchor = mindarThree.addAnchor(0); // Marker 0
+        const anchor = mindarThree.addAnchor(0); // target index: 0 (ilk target)
 
-      const loader = new THREE.GLTFLoader();
+        const loader = new GLTFLoader();
+        let model;
+        let modelLoaded = false;
 
-      let modelLoaded = false;
-      let model;
+        loader.load("./model.glb", (gltf) => {
+          model = gltf.scene;
+          model.scale.set(0.5, 0.5, 0.5);
+          model.visible = false;
+          scene.add(model); // Anchor değil, doğrudan sahneye eklendi
+        });
 
-      loader.load("./model.glb", (gltf) => {
-        model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5);
-        model.visible = false; // Başta görünmesin
-        scene.add(model); // Direkt sahneye ekle ama görünmesin
-      });
+        anchor.onTargetFound = () => {
+          if (!modelLoaded && model) {
+            model.position.copy(anchor.group.position);
+            model.quaternion.copy(anchor.group.quaternion);
+            model.visible = true;
+            modelLoaded = true;
+            console.log("Model sahneye eklendi ve sabitlendi.");
+          }
+        };
 
-      anchor.onTargetFound = () => {
-        if (!modelLoaded && model) {
-          // Marker bulunduğunda modelin pozisyonunu al ve aktif hale getir
-          model.position.copy(anchor.group.position);
-          model.quaternion.copy(anchor.group.quaternion);
-          model.visible = true;
-          modelLoaded = true;
-        }
+        await mindarThree.start();
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
       };
 
-      await mindarThree.start();
-
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
-      });
-    };
-
-    startAR();
-  </script>
-</body>
+      startAR();
+    </script>
+  </body>
+</html>
