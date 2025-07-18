@@ -1,67 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>MindAR + GLTF</title>
-<style>
-  body, html {
-    margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
-  }
-  #ar-container {
-    width: 100vw; height: 100vh;
-    position: relative;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>MindAR + GLTF</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0;
+      overflow: hidden;
+      width: 100%; height: 100%;
+    }
+    #ar-container {
+      width: 100vw; height: 100vh;
+      position: relative;
+    }
+  </style>
 
-<!-- Three.js -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
 
-<!-- MindAR UMD -->
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+  <!-- MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.4.1/dist/mindar-image-three.prod.js"></script>
 
 </head>
 <body>
+
   <div id="ar-container"></div>
 
-<script>
-  const start = async () => {
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.querySelector("#ar-container"),
-      imageTargetSrc: "./qrcode.mind"
-    });
+  <script>
+    const startAR = async () => {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.querySelector("#ar-container"),
+        imageTargetSrc: "./qrkod.mind"  // MindAR hedef dosyanız
+      });
 
-    const {renderer, scene, camera} = mindarThree;
+      const { renderer, scene, camera } = mindarThree;
 
-    const anchor = mindarThree.addAnchor(0);
+      const anchor = mindarThree.addAnchor(0);
 
-    const loader = new GLTFLoader();
-    let model = null;
-    loader.load("./model.glb", (gltf) => {
-      model = gltf.scene;
-      model.scale.set(0.5, 0.5, 0.5);
-      model.visible = false;
-      scene.add(model);
-    });
+      const loader = new THREE.GLTFLoader();
+      let model = null;
 
-    anchor.onTargetFound = () => {
-      if(model) {
-        model.visible = true;
-      }
+      loader.load('./model.glb', (gltf) => {
+        model = gltf.scene;
+        model.scale.set(0.5, 0.5, 0.5);
+        model.visible = false;
+        anchor.group.add(model);
+      });
+
+      anchor.onTargetFound = () => {
+        if (model) model.visible = true;
+      };
+
+      anchor.onTargetLost = () => {
+        if (model) model.visible = false;
+      };
+
+      await mindarThree.start();
+
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
     };
 
-    anchor.onTargetLost = () => {
-      // Burada modelin kaybolmasını engellemek için boş bırakabilirsin
-    };
+    startAR();
+  </script>
 
-    await mindarThree.start();
-
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
-  };
-
-  start();
-</script>
 </body>
 </html>
