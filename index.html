@@ -18,45 +18,46 @@
   <body>
     <div id="ar-container"></div>
 
-    <script>
-      const startAR = async () => {
-        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.querySelector("#ar-container"),
-          imageTargetSrc: "./qrcode.mind",
-        });
+script>
+  const startAR = async () => {
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.querySelector("#ar-container"),
+      imageTargetSrc: "./qrcode.mind",
+    });
 
-        const { renderer, scene, camera } = mindarThree;
+    const { renderer, scene, camera } = mindarThree;
 
-        const anchor = mindarThree.addAnchor(0);
+    const anchor = mindarThree.addAnchor(0);
 
-        const loader = new THREE.GLTFLoader();
-        let model;
-        let modelLoaded = false;
+    const loader = new GLTFLoader(); // Burada THREE.GLTFLoader değil direkt GLTFLoader
 
-        loader.load("./model.glb", (gltf) => {
-          model = gltf.scene;
-          model.scale.set(0.5, 0.5, 0.5);
-          model.visible = false;
-          scene.add(model);
-        });
+    let model;
+    let modelLoaded = false;
 
-        anchor.onTargetFound = () => {
-          if (!modelLoaded && model) {
-            model.position.copy(anchor.group.position);
-            model.quaternion.copy(anchor.group.quaternion);
-            model.visible = true;
-            modelLoaded = true;
-          }
-        };
+    loader.load("./model.glb", (gltf) => {
+      model = gltf.scene;
+      model.scale.set(0.5, 0.5, 0.5);
+      model.visible = false;
+      scene.add(model);
+    });
 
-        await mindarThree.start();
+    anchor.onTargetFound = () => {
+      if (!modelLoaded && model) {
+        model.position.copy(anchor.group.position);
+        model.quaternion.copy(anchor.group.quaternion);
+        model.visible = true;
+        modelLoaded = true;
+      }
+    };
 
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
-      };
+    await mindarThree.start();
 
-      startAR();
-    </script>
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  };
+
+  startAR();
+</script>
   </body>
 </html>
