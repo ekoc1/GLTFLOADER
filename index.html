@@ -1,39 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>MindAR GLTF AR</title>
-    <style>
-      body { margin: 0; overflow: hidden; }
-      #ar-container { width: 100vw; height: 100vh; position: relative; }
-    </style>
+<head>
+<meta charset="UTF-8" />
+<title>MindAR + GLTF</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
+  }
+  #ar-container {
+    width: 100vw; height: 100vh;
+    position: relative;
+  }
+</style>
 
-    <!-- Three.js ve eklentileri -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
 
-    <!-- MindAR (UMD versiyon, import edilemez ama tarayıcıda direkt çalışır) -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
-  </head>
-  <body>
-    <div id="ar-container"></div>
+<!-- MindAR UMD -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
-script>
-  const startAR = async () => {
+</head>
+<body>
+  <div id="ar-container"></div>
+
+<script>
+  const start = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.querySelector("#ar-container"),
-      imageTargetSrc: "./qrcode.mind",
+      imageTargetSrc: "./qrcode.mind"
     });
 
-    const { renderer, scene, camera } = mindarThree;
+    const {renderer, scene, camera} = mindarThree;
 
     const anchor = mindarThree.addAnchor(0);
 
-    const loader = new GLTFLoader(); // Burada THREE.GLTFLoader değil direkt GLTFLoader
-
-    let model;
-    let modelLoaded = false;
-
+    const loader = new GLTFLoader();
+    let model = null;
     loader.load("./model.glb", (gltf) => {
       model = gltf.scene;
       model.scale.set(0.5, 0.5, 0.5);
@@ -42,12 +45,13 @@ script>
     });
 
     anchor.onTargetFound = () => {
-      if (!modelLoaded && model) {
-        model.position.copy(anchor.group.position);
-        model.quaternion.copy(anchor.group.quaternion);
+      if(model) {
         model.visible = true;
-        modelLoaded = true;
       }
+    };
+
+    anchor.onTargetLost = () => {
+      // Burada modelin kaybolmasını engellemek için boş bırakabilirsin
     };
 
     await mindarThree.start();
@@ -57,7 +61,7 @@ script>
     });
   };
 
-  startAR();
+  start();
 </script>
-  </body>
+</body>
 </html>
