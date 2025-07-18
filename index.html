@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MindAR + GLTF Loader Örneği</title>
+  <title>MindAR + GLB Loader Örneği</title>
   <style>
     body, html {
       margin: 0; padding: 0; overflow: hidden;
@@ -19,29 +19,24 @@
 <body>
   <div id="ar-container"></div>
 
-  <!-- Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <!-- GLTFLoader -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-  <!-- MindAR (v1.2.0) -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+    import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js';
 
-  <script>
     const container = document.querySelector("#ar-container");
     let model = null;
 
     async function startAR() {
-      // MindAR başlat
-      const mindar = new window.MindARThree({
+      const mindar = new MindARThree({
         container: container,
         imageTargetSrc: "./qrcode.mind"
       });
 
       const { renderer, scene, camera } = mindar;
 
-      // GLTF model yükle
-      const loader = new THREE.GLTFLoader();
-      loader.load("./model.gltf", (gltf) => {
+      const loader = new GLTFLoader();
+      loader.load("./model.glb", (gltf) => {
         model = gltf.scene;
         model.scale.set(0.5, 0.5, 0.5);
         scene.add(model);
@@ -49,14 +44,11 @@
         console.error("Model yüklenirken hata:", error);
       });
 
-      // Marker görüldüğünde pozisyonu güncelle
       mindar.on("targetFound", (event) => {
         if (!model) return;
         const pos = event.detail.position;
         model.position.set(pos.x, pos.y, pos.z);
       });
-
-      // Marker kaybolduğunda model pozisyonu kalır (hiçbir işlem yok)
 
       await mindar.start();
 
